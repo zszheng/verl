@@ -20,6 +20,7 @@ python3 -m verl.trainer.main_ppo \
     data.truncation='error' \
     data.image_key=images \
     actor_rollout_ref.model.path=Qwen/Qwen2.5-VL-7B-Instruct \
+    actor_rollout_ref.model.model_dtype=float16 \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=True \
     actor_rollout_ref.actor.ppo_mini_batch_size=$BATCH_SIZE \
@@ -32,7 +33,6 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.actor.fsdp_config.param_offload=True \
     actor_rollout_ref.actor.fsdp_config.optimizer_offload=True \
     actor_rollout_ref.actor.fsdp_config.fsdp_size=$BATCH_SIZE \
-    actor_rollout_ref.actor.fsdp_config.model_dtype=float16 \
     actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.rollout.tensor_model_parallel_size=4 \
     actor_rollout_ref.rollout.max_num_batched_tokens=1280 \

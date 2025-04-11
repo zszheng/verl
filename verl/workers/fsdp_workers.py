@@ -165,7 +165,7 @@ class ActorRolloutRefWorker(Worker):
         self.tokenizer = hf_tokenizer(local_path, trust_remote_code=trust_remote_code)
         self.processor = hf_processor(local_path, trust_remote_code=trust_remote_code)
 
-        torch_dtype = fsdp_config.get('model_dtype', None)
+        torch_dtype = self.config.model.get('model_dtype', None)
         if torch_dtype is None:
             torch_dtype = torch.float32 if self._is_actor else torch.bfloat16
         else:
@@ -196,11 +196,11 @@ class ActorRolloutRefWorker(Worker):
                 actor_module_class = AutoModelForVision2Seq
             else:
                 actor_module_class = AutoModelForCausalLM
-
+            print(f"model info torch_dtype {torch_dtype}, attention {self.config.model.get('attn_impl', None)}")
             actor_module = actor_module_class.from_pretrained(pretrained_model_name_or_path=local_path,
                                                               torch_dtype=torch_dtype,
                                                               config=actor_model_config,
-                                                              attn_implementation=fsdp_config.get('attn_impl', None),
+                                                              attn_implementation=self.config.model.get('attn_impl', None),
                                                               trust_remote_code=trust_remote_code)
 
             if use_remove_padding or self.ulysses_sequence_parallel_size > 1:
