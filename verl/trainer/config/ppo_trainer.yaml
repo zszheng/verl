@@ -28,7 +28,7 @@ actor_rollout_ref:
     enable_gradient_checkpointing: True
     use_remove_padding: False
     attn_impl: ''
-    model_type: ''
+    model_dtype: ''
   actor:
     strategy: fsdp  # This is for backward-compatibility
     ppo_mini_batch_size: 256
