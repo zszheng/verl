@@ -6,7 +6,7 @@ export VLLM_ATTENTION_BACKEND=XFORMERS
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:64"
 
-NODES=2
+NODES=3
 BATCH_SIZE=$((NODES * 4))
 
 python3 -m verl.trainer.main_ppo \
