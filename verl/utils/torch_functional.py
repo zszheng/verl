@@ -14,7 +14,7 @@
 """
 Contain small torch utilities
 """
-
+import os
 from typing import Dict, Union, List, Optional
 
 import torch
@@ -25,7 +25,7 @@ from torch import nn
 
 try:
     from flash_attn.ops.triton.cross_entropy import cross_entropy_loss
-    FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = True
+    FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = bool(os.environ.get('DISABLE_FLASH_ATTN', 'True'))
 except ImportError:
     FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = False
 
