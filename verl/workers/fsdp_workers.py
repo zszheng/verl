@@ -983,8 +983,8 @@ class RewardModelWorker(Worker):
             warnings.simplefilter("ignore")
             setattr(model_config, 'classifier_dropout', 0.)
             reward_module = AutoModelForTokenClassification.from_pretrained(pretrained_model_name_or_path=local_path,
+                                                                            config=model_config,
                                                                             torch_dtype=torch.bfloat16,
-                                                                            config=actor_model_config,
                                                                             attn_implementation='flash_attention_2',
                                                                             trust_remote_code=trust_remote_code)
 
