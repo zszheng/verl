@@ -2,7 +2,7 @@ python3 ~/code/verl/examples/data_preprocess/geo3k.py --local_dir ~/data/geo3k
 
 set -x
 ENGINE=${1:-vllm}
-export VLLM_ATTENTION_BACKEND=XFORMERS
+export RAY_memory_monitor_refresh_ms=0
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:64"
 
