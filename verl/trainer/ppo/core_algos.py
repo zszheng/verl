@@ -475,6 +475,16 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
         kld = (ratio - kl - 1).contiguous()
         return torch.clamp(kld, min=-10, max=10)
 
+    if kl_penalty == 'low_val_kl_fixed':
+        kl = ref_logprob - logprob
+        # 硬截断 kl 的范围（防止 exp 溢出）
+        kl_clamped = torch.clamp(kl, min=-15, max=15)
+        ratio = torch.exp(kl_clamped)
+        # 计算 kld（基于截断后的 kl）
+        kld = ratio - kl_clamped - 1
+        # 最终输出截断（保留原始设计）
+        return torch.clamp(kld, min=-10, max=10)
+
     if kl_penalty == "full":
         # so, here logprob and ref_logprob should contain the logits for every token in vocabulary
         raise NotImplementedError
