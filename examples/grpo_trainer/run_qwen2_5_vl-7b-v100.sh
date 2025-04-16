@@ -20,7 +20,7 @@ python3 -m verl.trainer.main_ppo \
     data.truncation='error' \
     data.image_key=images \
     actor_rollout_ref.model.path=Qwen/Qwen2.5-VL-7B-Instruct \
-    actor_rollout_ref.model.model_dtype=float16 \
+    actor_rollout_ref.model.model_dtype=bfloat16 \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=False \
     actor_rollout_ref.actor.ppo_mini_batch_size=$BATCH_SIZE \
@@ -42,7 +42,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.rollout.enforce_eager=False \
     actor_rollout_ref.rollout.free_cache_engine=False \
     actor_rollout_ref.rollout.n=1 \
-    actor_rollout_ref.rollout.dtype=float16 \
+    actor_rollout_ref.rollout.dtype=bfloat16 \
     actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.ref.fsdp_config.param_offload=True \
     algorithm.use_kl_in_reward=False \
