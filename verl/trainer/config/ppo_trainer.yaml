@@ -29,6 +29,7 @@ actor_rollout_ref:
     use_remove_padding: False
     attn_impl: ''
     model_dtype: null
+    use_liger: False
   actor:
     strategy: fsdp  # This is for backward-compatibility
     ppo_mini_batch_size: 256
