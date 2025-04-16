@@ -86,12 +86,14 @@ class RayResourcePool(ResourcePool):
         if self.pgs is not None:
             return self.pgs
 
+        name = name if name else 'GPU'
         pg_name_prefix = name if name else \
             f"{self.name_prefix}verl_group_{'_'.join([str(count) for count in self._store])}:"
         # print(f"pg_name_prefix = {pg_name_prefix}")
         pg_scheme = [[{
             "CPU": self.max_collocate_count,
-            "GPU": 1
+            name: 1,
+            'GPU': 1
         } if self.use_gpu else {
             "CPU": self.max_collocate_count
         } for _ in range(process_count)] for process_count in self._store]
@@ -165,7 +167,8 @@ class RayClassWithInitArgs(ClassWithInitArgs):
                  placement_group_bundle_idx,
                  use_gpu: bool = True,
                  num_gpus=1,
-                 sharing_with=None) -> Any:
+                 sharing_with=None,
+                 gpu_prefix_name=None) -> Any:
         if sharing_with is not None:
             target_node_id = ray.get(sharing_with.get_node_id.remote())
             cuda_visible_devices = ray.get(sharing_with.get_cuda_visible_devices.remote())
@@ -182,7 +185,10 @@ class RayClassWithInitArgs(ClassWithInitArgs):
         options.update(self._options)
 
         if use_gpu:
-            options["num_gpus"] = num_gpus
+            if gpu_prefix_name:
+                options["resources"] = {gpu_prefix_name : num_gpus}
+            else:
+                options["num_gpus"] = num_gpus
 
         if len(self._additional_resource) > 1:
             for k, v in self._additional_resource.items():
@@ -240,7 +246,7 @@ class RayWorkerGroup(WorkerGroup):
         strategy = "PACK"
         if bin_pack:
             strategy = "STRICT_PACK"
-        pgs = resource_pool.get_placement_groups(strategy=strategy)
+        pgs = resource_pool.get_placement_groups(strategy=strategy, name=resource_pool.name_prefix)
         world_size = resource_pool.world_size
         self._world_size = world_size
         # cia.add_kwarg("_world_size", world_size)
@@ -282,7 +288,8 @@ class RayWorkerGroup(WorkerGroup):
                 worker = ray_cls_with_init(placement_group=pg,
                                            placement_group_bundle_idx=local_rank,
                                            use_gpu=use_gpu,
-                                           num_gpus=num_gpus)
+                                           num_gpus=num_gpus,
+                                           gpu_prefix_name=resource_pool.name_prefix)
                 self._workers.append(worker)
                 self._worker_names.append(name)
 
@@ -495,6 +502,6 @@ def create_colocated_worker_cls(class_dict: dict[str, RayClassWithInitArgs]):
         user_defined_cls = _unwrap_ray_remote(user_defined_cls)
         _bind_workers_method_to_parent(WorkerDict, key, user_defined_cls)
 
-    remote_cls = ray.remote(WorkerDict)
+    remote_cls = ray.remote(num_gpus=1)(WorkerDict)
     remote_cls = RayClassWithInitArgs(cls=remote_cls)
     return remote_cls

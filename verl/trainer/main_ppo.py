@@ -63,21 +63,23 @@ def run_ppo(config) -> None:
     # TODO(linjunrong.ocss884): this ENV is left for resolving SGLang conflict with ray devices
     # isolation, will solve in the future
     os.environ["ENSURE_CUDA_VISIBLE_DEVICES"] = os.environ.get('CUDA_VISIBLE_DEVICES', '')
+    os.environ["RAY_IGNORE_VERSION_MISMATCH"] = 'True'
     if not ray.is_initialized():
         # this is for local ray cluster
         ray.init(runtime_env={
             'env_vars': {
+                'RAY_IGNORE_VERSION_MISMATCH': 'true',
                 'TOKENIZERS_PARALLELISM': 'true',
                 'NCCL_DEBUG': 'WARN',
                 'VLLM_LOGGING_LEVEL': 'WARN'
             }
         })
 
-    runner = TaskRunner.remote()
-    ray.get(runner.run.remote(config))
+    runner = TaskRunner()
+    runner.run(config=config)
 
 
-@ray.remote(num_cpus=1)  # please make sure main_task is not scheduled on head
+# @ray.remote(num_cpus=1)  # please make sure main_task is not scheduled on head
 class TaskRunner:
 
     def run(self, config):
@@ -118,16 +120,25 @@ class TaskRunner:
         role_worker_mapping = {
             Role.ActorRollout: ray.remote(ActorRolloutRefWorker),
             Role.Critic: ray.remote(CriticWorker),
+            Role.Actor: ray.remote(ActorRolloutRefWorker),
+            Role.Rollout: ray.remote(ActorRolloutRefWorker),
         }
 
-        global_pool_id = 'global_pool'
+        global_pool_id = 'V10032'
+        # inference_pool_id = 'V10016'
+        inference_pool_id = 'A10'
         resource_pool_spec = {
             global_pool_id: [config.trainer.n_gpus_per_node] * config.trainer.nnodes,
+            inference_pool_id: [config.inference.n_gpus_per_node] * config.inference.nnodes,
         }
         mapping = {
             Role.ActorRollout: global_pool_id,
             Role.Critic: global_pool_id,
         }
+
+        if not config.actor_rollout_ref.hybrid_engine:
+            mapping[Role.Actor] = global_pool_id
+            mapping[Role.Rollout] = inference_pool_id
 
         # we should adopt a multi-source reward function here
         # - for rule-based rm, we directly call a reward score

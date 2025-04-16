@@ -20,7 +20,7 @@ data:
       name: null
 
 actor_rollout_ref:
-  hybrid_engine: True
+  hybrid_engine: False
   model:
     path: ~/models/deepseek-llm-7b-chat
     external_lib: null
@@ -192,6 +192,10 @@ algorithm:
     kl_coef: 0.001
     horizon: 10000
     target_kl: 0.1
+
+inference:
+  nnodes: 2
+  n_gpus_per_node: 4
 
 trainer:
   balance_batch: True
