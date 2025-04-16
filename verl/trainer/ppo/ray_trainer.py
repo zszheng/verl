@@ -615,17 +615,7 @@ class RayPPOTrainer(object):
                                                      role='actor_rollout')
             self.resource_pool_to_cls[resource_pool]['actor_rollout'] = actor_rollout_cls
         else:
-            actor_resource_pool = self.resource_pool_manager.get_resource_pool(Role.Actor)
-            actor_cls = RayClassWithInitArgs(cls=self.role_worker_mapping[Role.Actor],
-                                             config=self.config.actor,
-                                             role='actor')
-            self.resource_pool_to_cls[actor_resource_pool]['actor'] = actor_cls
-
-            rollout_resource_pool = self.resource_pool_manager.get_resource_pool(Role.Rollout)
-            rollout_cls = RayClassWithInitArgs(cls=self.role_worker_mapping[Role.Rollout],
-                                             config=self.config.rollout,
-                                             role='rollout')
-            self.resource_pool_to_cls[rollout_resource_pool]['rollout'] = rollout_cls
+            raise NotImplementedError
 
         # create critic
         if self.use_critic:
