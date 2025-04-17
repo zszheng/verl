@@ -71,7 +71,7 @@ class DataParallelPPOActor(BasePPOActor):
                 multi_modal_inputs[key] = torch.cat([inputs[key] for inputs in micro_batch['multi_modal_inputs']],
                                                     dim=0)
 
-        with torch.autocast(device_type='cuda', dtype=torch.float16):
+        with torch.autocast(device_type='cuda', enabled=False):
             input_ids = micro_batch['input_ids']
             batch_size, seqlen = input_ids.shape
             attention_mask = micro_batch['attention_mask']
@@ -148,16 +148,18 @@ class DataParallelPPOActor(BasePPOActor):
                 log_probs = full_log_probs.squeeze(-1)[:, -response_length - 1:-1]  # (bsz, response_length)
 
             else:  # not using rmpad and no ulysses sp
-                output = self.actor_module(input_ids=input_ids,
-                                           attention_mask=attention_mask,
-                                           position_ids=position_ids,
-                                           **multi_modal_inputs,
-                                           use_cache=False)  # prevent model thinks we are generating
+                output = self.actor_module(
+                    input_ids=input_ids.float(),
+                    attention_mask=attention_mask.float() if attention_mask is not None else None,
+                    position_ids=position_ids.float(),
+                    **multi_modal_inputs,
+                    use_cache=False
+                )  # prevent model thinks we are generating
                 logits = output.logits
-                logits.div_(temperature)
-                logits = logits[:, -response_length - 1:-1, :]  # (bsz, response_length, vocab_size)
                 assert not torch.isnan(logits).any(), (f"Model no Padding logits contain NaN!"
                                                        f" Max: {logits.max()}, Min: {logits.min()}， dtype {self.config.get('model_dtype')}")
+                logits.div_(temperature)
+                logits = logits[:, -response_length - 1:-1, :]  # (bsz, response_length, vocab_size)
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
                 entropy = verl_F.entropy_from_logits(logits)  # (bsz, response_length)
 

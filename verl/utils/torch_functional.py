@@ -68,12 +68,6 @@ def logprobs_from_logits_flash_attn(logits, labels):
     return -output[0]
 
 
-def logprobs_from_logits_naive_fix(logits, labels):
-    logp = F.log_softmax(logits, dim=-1)
-    logpy = torch.gather(logp, 1, labels.unsqueeze(1)).squeeze(1)
-    return logpy
-
-
 def logprobs_from_logits_naive(logits, labels):
     logp = F.log_softmax(logits, dim=-1)
     logpy = gather_from_labels(logp, labels)
