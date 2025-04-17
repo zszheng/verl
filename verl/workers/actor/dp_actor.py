@@ -162,8 +162,10 @@ class DataParallelPPOActor(BasePPOActor):
         assert self.config.grad_clip is not None
 
         if isinstance(self.actor_module, FSDP):
+            print(f"this actor_model {self.actor_module}, is FSDP, and grad clip {self.config.grad_clip}.")
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
+            print(f"this actor_model {self.actor_module} grad clip {self.config.grad_clip}.")
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
 
         # if grad_norm is not finite, skip the update
