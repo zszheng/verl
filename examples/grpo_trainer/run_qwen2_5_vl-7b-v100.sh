@@ -23,6 +23,7 @@ python3 -m verl.trainer.main_ppo \
     actor_rollout_ref.model.model_dtype=bfloat16 \
     actor_rollout_ref.actor.optim.lr=1e-6 \
     actor_rollout_ref.model.use_remove_padding=False \
+    actor_rollout_ref.model.attn_impl=eager \
     actor_rollout_ref.actor.ppo_mini_batch_size=$BATCH_SIZE \
     actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1 \
     actor_rollout_ref.actor.use_kl_loss=True \
