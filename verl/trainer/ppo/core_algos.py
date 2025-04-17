@@ -485,6 +485,18 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
         # 最终输出截断（保留原始设计）
         return torch.clamp(kld, min=-10, max=10)
 
+    if kl_penalty == 'low_var_kl_safe':
+        kl = ref_logprob - logprob
+        kl_clamped = torch.clamp(kl, min=-5, max=5)  # 防止 exp 溢出
+        ratio = torch.exp(kl_clamped)
+        # 更稳定的 KLD 计算（避免大数减大数）
+        kld = torch.where(
+            kl_clamped > 0,
+            ratio - kl_clamped - 1,  # 原始公式
+            -0.5 * kl_clamped.pow(2),  # 泰勒展开近似（kl_clamped 接近 0 时更稳定）
+        )
+        return torch.clamp(kld, min=-10, max=10)
+
     if kl_penalty == 'low_var_kl_fp32':
         with torch.autocast(device_type='cuda', enabled=False):  # 禁用混合精度
             kl = ref_logprob.float() - logprob.float()
