@@ -112,6 +112,9 @@ class DataParallelPPOActor(BasePPOActor):
                                            position_ids=position_ids_rmpad,
                                            **multi_modal_inputs,
                                            use_cache=False)  # prevent model thinks we are generating
+                logits = output.logits
+                assert not torch.isnan(logits).any(), f"Model logits contain NaN! Max: {logits.max()}, Min: {logits.min()}"
+
                 logits_rmpad = output.logits.squeeze(0)  # (total_nnz, vocab_size)
 
                 logits_rmpad.div_(temperature)
