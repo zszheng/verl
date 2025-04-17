@@ -473,13 +473,7 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
         kl = ref_logprob - logprob
         ratio = torch.exp(kl)
         kld = (ratio - kl - 1).contiguous()
-        return torch.clamp(kl, min=-5, max=5)
-
-    if kl_penalty == 'low_var_kl_fixed0':
-        kl = ref_logprob - logprob
-        ratio = torch.exp(kl)
-        kld = (ratio - kl - 1).contiguous()
-        return torch.clamp(kl, min=-5, max=5)
+        return torch.clamp(kl, min=-10, max=10)
 
     if kl_penalty == 'low_var_kl_fixed':
         kl = ref_logprob - logprob
@@ -491,6 +485,13 @@ def kl_penalty(logprob: torch.FloatTensor, ref_logprob: torch.FloatTensor, kl_pe
         # 最终输出截断（保留原始设计）
         return torch.clamp(kld, min=-10, max=10)
 
+    if kl_penalty == 'low_var_kl_fp32':
+        with torch.autocast(device_type='cuda', enabled=False):  # 禁用混合精度
+            kl = ref_logprob.float() - logprob.float()
+            kl_clamped = torch.clamp(kl, min=-5, max=5)
+            ratio = torch.exp(kl_clamped)
+            kld = ratio - kl_clamped - 1
+            return torch.clamp(kld, min=-10, max=10).to(logprob.dtype)
 
     if kl_penalty == "full":
         # so, here logprob and ref_logprob should contain the logits for every token in vocabulary
