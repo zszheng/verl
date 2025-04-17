@@ -57,7 +57,7 @@ def logprobs_from_logits(logits, labels):
         output = logprobs_from_logits_flash_attn(logits, labels)
         output = output.view(*batch_dim)
     else:
-        output = logprobs_from_logits_naive_fix(logits, labels)
+        output = logprobs_from_logits_naive(logits, labels)
     return output
 
 

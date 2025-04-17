@@ -71,7 +71,7 @@ class DataParallelPPOActor(BasePPOActor):
                 multi_modal_inputs[key] = torch.cat([inputs[key] for inputs in micro_batch['multi_modal_inputs']],
                                                     dim=0)
 
-        with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
+        with torch.autocast(device_type='cuda', dtype=torch.float16):
             input_ids = micro_batch['input_ids']
             batch_size, seqlen = input_ids.shape
             attention_mask = micro_batch['attention_mask']
@@ -156,6 +156,8 @@ class DataParallelPPOActor(BasePPOActor):
                 logits = output.logits
                 logits.div_(temperature)
                 logits = logits[:, -response_length - 1:-1, :]  # (bsz, response_length, vocab_size)
+                assert not torch.isnan(logits).any(), (f"Model no Padding logits contain NaN!"
+                                                       f" Max: {logits.max()}, Min: {logits.min()}， dtype {self.config.get('model_dtype')}")
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
                 entropy = verl_F.entropy_from_logits(logits)  # (bsz, response_length)
 
