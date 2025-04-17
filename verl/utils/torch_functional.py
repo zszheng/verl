@@ -25,7 +25,7 @@ from torch import nn
 
 try:
     from flash_attn.ops.triton.cross_entropy import cross_entropy_loss
-    FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = False #os.environ.get('DISABLE_FLASH_ATTN', 'False') != 'True'
+    FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = os.environ.get('DISABLE_FLASH_ATTN', 'False') != 'True'
 except ImportError:
     FLAH_ATTN_CROSS_ENTROPY_LOSS_AVAILABLE = False
 
@@ -57,7 +57,7 @@ def logprobs_from_logits(logits, labels):
         output = logprobs_from_logits_flash_attn(logits, labels)
         output = output.view(*batch_dim)
     else:
-        output = logprobs_from_logits_naive(logits, labels)
+        output = logprobs_from_logits_v2(logits, labels)
     return output
 
 
