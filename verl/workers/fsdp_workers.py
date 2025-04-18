@@ -385,6 +385,7 @@ class ActorRolloutRefWorker(Worker):
 
         use_remove_padding = self.config.model.get('use_remove_padding', False)
 
+        print(f"this role {self.role} ready to init model.")
         if self._is_actor or self._is_rollout:
             # we need the model for actor and rollout
             if self._is_actor:
