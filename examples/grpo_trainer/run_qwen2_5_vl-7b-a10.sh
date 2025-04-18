@@ -6,7 +6,7 @@ export VLLM_ATTENTION_BACKEND=XFORMERS
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,max_split_size_mb:64"
 
-NODES=2
+NODES=1
 BATCH_SIZE=$((NODES * 4))
 
 
