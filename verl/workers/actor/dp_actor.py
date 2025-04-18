@@ -112,6 +112,9 @@ class DataParallelPPOActor(BasePPOActor):
                                            position_ids=position_ids_rmpad,
                                            **multi_modal_inputs,
                                            use_cache=False)  # prevent model thinks we are generating
+                logits = output.logits
+                assert not torch.isnan(logits).any(), f"Model logits contain NaN! Max: {logits.max()}, Min: {logits.min()}"
+
                 logits_rmpad = output.logits.squeeze(0)  # (total_nnz, vocab_size)
 
                 logits_rmpad.div_(temperature)
@@ -151,6 +154,8 @@ class DataParallelPPOActor(BasePPOActor):
                                            **multi_modal_inputs,
                                            use_cache=False)  # prevent model thinks we are generating
                 logits = output.logits
+                assert not torch.isnan(logits).any(), (f"Model no Padding logits contain NaN!"
+                                                       f" Max: {logits.max()}, Min: {logits.min()}， dtype {self.config.get('model_dtype')}")
                 logits.div_(temperature)
                 logits = logits[:, -response_length - 1:-1, :]  # (bsz, response_length, vocab_size)
                 log_probs = logprobs_from_logits(logits, micro_batch['responses'])
@@ -162,8 +167,10 @@ class DataParallelPPOActor(BasePPOActor):
         assert self.config.grad_clip is not None
 
         if isinstance(self.actor_module, FSDP):
+            print(f"this actor_model {self.actor_module}, is FSDP, and grad clip {self.config.grad_clip}.")
             grad_norm = self.actor_module.clip_grad_norm_(max_norm=self.config.grad_clip)
         else:
+            print(f"this actor_model {self.actor_module} grad clip {self.config.grad_clip}.")
             grad_norm = torch.nn.utils.clip_grad_norm_(self.actor_module.parameters(), max_norm=self.config.grad_clip)
 
         # if grad_norm is not finite, skip the update
